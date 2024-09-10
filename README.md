@@ -10,8 +10,8 @@ Before running the script, ensure the following are installed and set up:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/ssiar-fastly/edge_deploy.git
-   cd edge_deploy
+   git clone https://github.com/fastly/ngwafcli.git
+   cd ngwafcli
    ```
    Install Dependencies:
    ```bash
@@ -95,13 +95,13 @@ site2,serviceID2
 To use the CSV file, provide the file path as a command-line argument:
 
 ```bash
-python3 edge_deploy.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --csv_file 'path/to/sites.csv' [--activate] [--percent_enabled <0-100>]
+python3 ngwafcli.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --csv_file 'path/to/sites.csv' [--activate] [--percent_enabled <0-100>]
 ```
 
 For backend synchronization:
 
 ```bash
-python3 edge_deploy.py --sync-backend --csv_file 'path/to/sites.csv'
+python3 ngwafcli.py --sync-backend --csv_file 'path/to/sites.csv'
 ```
 
 ### Updating the CSV File with `setup_env.zsh`
@@ -123,13 +123,13 @@ The script can be executed by providing command-line arguments or by setting env
 Execute the script by passing the required parameters:
 
 ```bash
-python3 edge_deploy.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --site_name 'your_site_name' --fastly_sid 'your_fastly_service_id' [--activate] [--percent_enabled <0-100>]
+python3 ngwafcli.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --site_name 'your_site_name' --fastly_sid 'your_fastly_service_id' [--activate] [--percent_enabled <0-100>]
 ```
 
 Alternatively, you can provide a CSV file containing site names and Fastly Service IDs:
 
 ```bash
-python3 edge_deploy.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --csv_file 'path/to/sites.csv' [--activate] [--percent_enabled <0-100>]
+python3 ngwafcli.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 'your_ngwaf_token' --fastly_token 'your_fastly_token' --corp_name 'your_corp_name' --csv_file 'path/to/sites.csv' [--activate] [--percent_enabled <0-100>]
 ```
 
 ### Synchronizing Origins with Fastly Backend
@@ -137,7 +137,7 @@ python3 edge_deploy.py --ngwaf_user_email 'your_ngwaf_user_email' --ngwaf_token 
 To synchronize origins using the CSV file:
 
 ```bash
-python3 edge_deploy.py --sync-backend --csv_file 'path/to/sites.csv'
+python3 ngwafcli.py --sync-backend --csv_file 'path/to/sites.csv'
 ```
 
 ### Using Environment Variables
@@ -158,28 +158,28 @@ export PERCENT_ENABLED='10' # Optional, default is 0
 Then, execute the script:
 
 ```bash
-python3 edge_deploy.py
+python3 ngwafcli.py
 ```
 
 ### Example Scenarios
 
 - **Deploying with Partial Traffic Ramping:**
   ```bash
-  python3 edge_deploy.py --ngwaf_user_email 'user@example.com' --ngwaf_token 'token123' --fastly_token 'fastlykey123' --corp_name 'MyCorp' --site_name 'MySite' --fastly_sid 'serviceID' --activate --percent_enabled 25
+  python3 ngwafcli.py --ngwaf_user_email 'user@example.com' --ngwaf_token 'token123' --fastly_token 'fastlykey123' --corp_name 'MyCorp' --site_name 'MySite' --fastly_sid 'serviceID' --activate --percent_enabled 25
   ```
 
 This command deploys the NG WAF with 25% of traffic initially routed through the new setup.
 
 - **Deploying without Activating the Fastly Service:**
   ```bash
-  python3 edge_deploy.py --ngwaf_user_email 'user@example.com' --ngwaf_token 'token123' --fastly_token 'fastlykey123' --corp_name 'MyCorp' --site_name 'MySite' --fastly_sid 'serviceID'
+  python3 ngwafcli.py --ngwaf_user_email 'user@example.com' --ngwaf_token 'token123' --fastly_token 'fastlykey123' --corp_name 'MyCorp' --site_name 'MySite' --fastly_sid 'serviceID'
   ```
 
 This will set up the NG WAF without activating the Fastly service version, allowing for manual activation later.
 
 - **Synchronizing Origins for Multiple Sites:**
   ```bash
-  python3 edge_deploy.py --sync-backend --csv_file 'path/to/sites.csv'
+  python3 ngwafcli.py --sync-backend --csv_file 'path/to/sites.csv'
   ```
 
 This command synchronizes the origins for all sites listed in the provided CSV file.
