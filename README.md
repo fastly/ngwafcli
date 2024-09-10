@@ -1,7 +1,3 @@
-Here's the updated README for the `ngwafcli.py` script, incorporating the new flags for dynamic backend and premier, along with detailed usage instructions:
-
----
-
 # NGWAF CLI Tool
 
 A Python tool to manage NG WAF deployments on Fastly services, offering features like provisioning, edge security object management, traffic ramping, and backend synchronization.
@@ -175,7 +171,3 @@ Contributions are welcome! Fork the repository and submit pull requests.
 ## Contact
 
 Sina Siar - [@ssiar](https://linkedin.com/in/ssiar) - ssiar@fastly.com
-
----
-
-This README reflects the latest features and usage, including the new flags for dynamic backend and premier deployment options.
