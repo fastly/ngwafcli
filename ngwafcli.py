@@ -1,3 +1,4 @@
+import subprocess
 import os
 import requests
 import argparse
@@ -160,7 +161,20 @@ def map_to_fastly_service(ngwaf_user_email, ngwaf_token, fastly_token, corp_name
         print(f"Response Headers: {response.headers}")
     return response
 
-def process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid, activate_version, percent_enabled, show_response_headers=False):
+def process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid, activate_version, percent_enabled, dynamic_backend, premier, show_response_headers=False):
+    """Processing a single site, adding to the correct groups before mapping"""
+    
+    # Add to 'sigsci-edge-dynamic-backends' group if --dynamic-backend flag is passed
+    if dynamic_backend:
+        print(f"Adding {corp_name} to sigsci-edge-dynamic-backends group...")
+        add_corp_to_group(corp_name, 'sigsci-edge-dynamic-backends')
+
+    # Add to 'rate-limiting' group if --premier flag is passed
+    if premier:
+        print(f"Adding {corp_name} to rate-limiting group...")
+        add_corp_to_group(corp_name, 'rate-limiting')
+    
+    # Check NG WAF object exists and proceed with creating or skipping edge object
     if check_ngwaf_object_exists(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name):
         print(f"NG WAF object exists for {site_name}, skipping edge object creation and wait time.")
         skip_wait = True
@@ -180,13 +194,14 @@ def process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, 
             print(f"Failed to create edge security object. Status Code: {create_response.status_code} - Details: {create_response.text}")
             return
 
+    # Now map to Fastly service after adding corp to appropriate groups
     map_response = map_to_fastly_service(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid, activate_version, percent_enabled, skip_wait, show_response_headers)
     if map_response.status_code == 200:
         print("Edge deployment completed successfully.")
     else:
         print(f"Edge deployment failed during mapping to Fastly service: Status Code {map_response.status_code} - Details: {map_response.text}")
 
-def process_sites_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_token, corp_name, activate_version, percent_enabled, show_response_headers=False):
+def process_sites_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_token, corp_name, activate_version, percent_enabled, dynamic_backend, premier, show_response_headers=False):
     temp_file_path = csv_file_path + ".tmp"
 
     with open(csv_file_path, mode='r') as read_file, open(temp_file_path, mode='w', newline='') as write_file:
@@ -198,10 +213,20 @@ def process_sites_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_
                 continue
 
             site_name, fastly_sid = row[0], row[1]
-            process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid, activate_version, percent_enabled, show_response_headers)
+            process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid, activate_version, percent_enabled, dynamic_backend, premier, show_response_headers)
             writer.writerow(row)
 
     os.replace(temp_file_path, csv_file_path)
+
+def add_corp_to_group(corp_name, group_name):
+    """Function to add a corp to a group using voltron.py"""
+    voltron_command = f"python voltron.py -c {corp_name} -a add -g {group_name}"
+    try:
+        subprocess.run(voltron_command, shell=True, check=True)
+        print(f"Successfully added {corp_name} to {group_name} group.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error adding {corp_name} to {group_name} group: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deploy NG WAF on Fastly Services")
@@ -219,6 +244,8 @@ if __name__ == "__main__":
     parser.add_argument('--fastly_sid', help='Fastly Service ID, required for provisioning or synchronization')
     parser.add_argument('--activate', type=lambda x: (str(x).lower() == 'true'), help='Activate the Fastly service version, required for provisioning')
     parser.add_argument('--percent_enabled', type=int, help='Percentage of traffic to send to NG WAF, required for provisioning')
+    parser.add_argument('--dynamic-backend', action='store_true', help='Add the corp to sigsci-edge-dynamic-backends group before mapping')
+    parser.add_argument('--premier', action='store_true', help='Add the corp to rate-limiting group before mapping')
     parser.add_argument('--show-response-headers', action='store_true', help='Flag to show response headers')
 
     args = parser.parse_args()
@@ -227,7 +254,7 @@ if __name__ == "__main__":
         if not all([args.csv_file, args.activate is not None, args.percent_enabled is not None]):
             print("Error: --csv_file, --activate, and --percent_enabled are required for provisioning.")
             exit(1)
-        process_sites_from_csv(args.csv_file, args.ngwaf_user_email, args.ngwaf_token, args.fastly_token, args.corp_name, args.activate, args.percent_enabled, args.show_response_headers)
+        process_sites_from_csv(args.csv_file, args.ngwaf_user_email, args.ngwaf_token, args.fastly_token, args.corp_name, args.activate, args.percent_enabled, args.dynamic_backend, args.premier, args.show_response_headers)
     
     elif args.sync_backend:
         if not args.csv_file:
