@@ -76,5 +76,5 @@ echo "Please run 'source ~/.zshrc' to load the new environment function into you
 echo "Use 'setenv_${CORP_NAME}' to load the environment variables in the future."
 
 echo "Use the python command below to execute the NGWAF onboarding:"
-echo "python3 edge_deploy.py --csv_file file.csv --activate false --percent_enabled 100 --provision"
+echo "python3 ngwafcli.py --csv_file file.csv --activate false --percent_enabled 100 --provision"
 
