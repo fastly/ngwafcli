@@ -27,14 +27,27 @@ if [[ "$1" == "--update-file" ]]; then
     UPDATE_FILE=true
 fi
 
-# Prompt for values
-CORP_NAME=$(prompt_for_input "Enter value for CORP_NAME")
-NGWAF_USER_EMAIL="ssiar+${CORP_NAME}@fastly.com"
+# Prompt for NGWAF_USER_EMAIL
+NGWAF_USER_EMAIL=$(prompt_for_input "Enter your NGWAF_USER_EMAIL")
+
+# If the email is a Fastly email, use its user ID to create the corp email alias
+if [[ "$NGWAF_USER_EMAIL" == *"@fastly.com" ]]; then
+    # Extract the username portion from the Fastly email
+    USER_ID=$(echo "$NGWAF_USER_EMAIL" | cut -d '@' -f 1)
+    CORP_NAME=$(prompt_for_input "Enter value for CORP_NAME")
+    NGWAF_USER_EMAIL="${USER_ID}+${CORP_NAME}@fastly.com"
+else
+    # If not a Fastly email, prompt for CORP_NAME as usual
+    CORP_NAME=$(prompt_for_input "Enter value for CORP_NAME")
+fi
+
+# Prompt for other necessary values
 NGWAF_TOKEN=$(prompt_for_input "Enter value for NGWAF_TOKEN")
 FASTLY_TOKEN=$(prompt_for_input "Enter value for FASTLY_TOKEN")
 
 # Create the environment file
 ENV_FILE=~/.env_configs/${CORP_NAME}.env
+mkdir -p ~/.env_configs  # Ensure the directory exists
 cat <<EOL > $ENV_FILE
 export NGWAF_USER_EMAIL=${NGWAF_USER_EMAIL}
 export NGWAF_TOKEN=${NGWAF_TOKEN}
@@ -69,7 +82,6 @@ if $UPDATE_FILE; then
     echo "file.csv has been updated with site_name and service_id."
 fi
 
-
 # Notify user to reload .zshrc to pick up the new function
 echo "Please run 'source ~/.zshrc' to load the new environment function into your current session."
 
@@ -77,4 +89,3 @@ echo "Use 'setenv_${CORP_NAME}' to load the environment variables in the future.
 
 echo "Use the python command below to execute the NGWAF onboarding:"
 echo "python3 ngwafcli.py --csv_file file.csv --activate false --percent_enabled 100 --provision"
-
