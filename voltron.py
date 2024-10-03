@@ -5,16 +5,51 @@ import json
 import requests
 import sys
 from parsel import Selector
+import os
+from datetime import datetime, timedelta
 
 CORPS = []
 
-def request_url(url, **kwargs):
+# Function to check if .voltron_cookie file is older than 1 day
+def check_cookie_file(file_path):
+    if os.path.exists(file_path):
+        file_mod_time = os.path.getmtime(file_path)
+        file_mod_date = datetime.fromtimestamp(file_mod_time)
+        current_date = datetime.now()
+
+        # Check if the file is older than 1 day
+        if current_date - file_mod_date > timedelta(days=1):
+            return False
+        return True
+    else:
+        return False
+
+# Function to update .voltron_cookie file
+def update_cookie_file(file_path):
+    print("Your .voltron_cookie file is out of date. Please enter a new cookie value:")
+    cookie = input("Enter new cookie: ")
+
+    with open(file_path, 'w') as f:
+        f.write(cookie)
+
+# Function to read the cookie from .voltron_cookie
+def get_cookie():
+    cookie_file = ".voltron_cookie"
+    if not check_cookie_file(cookie_file):
+        update_cookie_file(cookie_file)
+    
     try:
-        with open(".env", "rb") as f:
-            cookie = f.read()
+        with open(cookie_file, "r") as f:
+            cookie = f.read().strip()
     except FileNotFoundError:
-        print("Requires cookie")
+        print("Cookie file not found.")
         sys.exit()
+
+    return cookie
+
+# Function to make requests with the cookie
+def request_url(url, **kwargs):
+    cookie = get_cookie()
     headers = {"Cookie": str(cookie)}
 
     method = kwargs.get("method", None)
