@@ -66,17 +66,6 @@ def sync_backend(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_na
         print(f"Failed to synchronize origins. Status Code: {response.status_code} - Details: {response.text}")
     return response
 
-
-def process_sync_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_token, corp_name):
-    with open(csv_file_path, mode='r') as read_file:
-        reader = csv.reader(read_file)
-        for row in reader:
-            if len(row) < 2:
-                continue
-            site_name, fastly_sid = row[0], row[1]
-            sync_backend(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid)
-
-
 @retry_api_call
 def check_ngwaf_object_exists(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name):
     url = f"{BASE_URL}/corps/{corp_name}/sites/{site_name}/edgeDeployment"
@@ -201,6 +190,18 @@ def process_single_site(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, 
         print(f"Edge deployment failed during mapping to Fastly service: Status Code {map_response.status_code} - Details: {map_response.text}")
 
 
+def process_sync_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_token, corp_name):
+    with open(csv_file_path, mode='r') as read_file:
+        reader = csv.reader(read_file)
+        for row in reader:
+            # Trim spaces from each entry in the row
+            row = [entry.strip() for entry in row]
+            if len(row) < 2:
+                continue
+            site_name, fastly_sid = row[0], row[1]
+            sync_backend(ngwaf_user_email, ngwaf_token, fastly_token, corp_name, site_name, fastly_sid)
+
+
 def process_sites_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_token, corp_name, activate_version, percent_enabled, dynamic_backend, premier, show_response_headers=False):
     temp_file_path = csv_file_path + ".tmp"
 
@@ -209,6 +210,8 @@ def process_sites_from_csv(csv_file_path, ngwaf_user_email, ngwaf_token, fastly_
         writer = csv.writer(write_file)
 
         for row in reader:
+            # Trim spaces from each entry in the row
+            row = [entry.strip() for entry in row]
             if len(row) < 2:
                 continue
 
